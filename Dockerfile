@@ -50,80 +50,26 @@ RUN dpkg --add-architecture i386 \
 # ==================================================================
 # Builder for "voron" libcod
 # ==================================================================
-FROM build-base AS build-voron
+FROM build-base AS build-ddrabik
 ARG COD2_VERSION
 ARG LIBCOD_MYSQL_TYPE
 ARG LIBCOD_VORON_VERSION
 ARG TMPDIR=/tmp
 
-RUN git clone https://github.com/voron00/libcod "${TMPDIR}/libcod2"
+RUN git clone https://github.com/DanielDrabik/libcod "${TMPDIR}/libcod2"
 WORKDIR ${TMPDIR}/libcod2
 RUN git checkout ${LIBCOD_VORON_VERSION}
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 # Configure MySQL/SQLite support (0=disable via config.hpp modification)
-# Voron custom mysql support dropped with this commit: https://github.com/voron00/libcod/commit/ced0aa4cd1880be6180d8132a9495b3009d06fcb
+# Voron custom mysql support dropped with this commit: https://github.com/DanielDrabik/libcod/commit/ced0aa4cd1880be6180d8132a9495b3009d06fcb
 RUN if [ "${LIBCOD_MYSQL_TYPE}" = "0" ]; then \
   sed -i "/#define COMPILE_MYSQL 1/c\\#define COMPILE_MYSQL 0" config.hpp && \
   sed -i "/#define COMPILE_SQLITE 1/c\\#define COMPILE_SQLITE 0" config.hpp; \
-fi
+  fi
 # Build libcod for specified COD2 version (doit.sh expects cod2_1_0, cod2_1_2, or cod2_1_3)
 RUN ./doit.sh cod2_${COD2_VERSION} && \
   mv bin/libcod2_${COD2_VERSION}.so /lib/libcod2_${COD2_VERSION}.so
-
-# ==================================================================
-# Builder for "ibuddieat" zk_libcod
-# ==================================================================
-FROM build-base AS build-ibuddieat
-ARG COD2_VERSION
-ARG LIBCOD_MYSQL_TYPE
-ARG LIBCOD_SPEEX_ENABLE
-ARG LIBCOD_IBUDDIEAT_VERSION
-ARG TMPDIR=/tmp
-
-# Compile speex for 32-bit architecture if enabled
-ARG SPEEX_VERSION
-# hadolint ignore=DL3003
-RUN if [ "${LIBCOD_SPEEX_ENABLE}" = "1" ]; then \
-  cd ${TMPDIR} && \
-  git clone --depth 1 --branch ${SPEEX_VERSION} https://gitlab.xiph.org/xiph/speex.git speex && \
-  cd speex && \
-  env AUTOMAKE=automake ACLOCAL=aclocal LIBTOOLIZE=libtoolize ./autogen.sh >/dev/null && \
-  ./configure \
-    CFLAGS="-m32 -O2" \
-    CXXFLAGS="-m32 -O2" \
-    LDFLAGS=-m32 \
-    --build=x86_64-pc-linux-gnu \
-    --host=i686-pc-linux-gnu \
-    >/dev/null && \
-  sed -i 's/u_int\([0-9]*\)_t/uint\1_t/g' include/speex/speex_config_types.h && \
-  make >/dev/null && \
-  make install >/dev/null && \
-  ldconfig && \
-  rm -rf ${TMPDIR}/speex; \
-fi
-
-RUN git clone https://github.com/ibuddieat/zk_libcod "${TMPDIR}/libcod2"
-WORKDIR ${TMPDIR}/libcod2/code
-RUN git checkout ${LIBCOD_IBUDDIEAT_VERSION}
-
-SHELL ["/bin/bash", "-o", "pipefail", "-c"]
-RUN if [ "${LIBCOD_MYSQL_TYPE}" = "0" ]; then \
-    MYSQL_ARG="nomysql"; \
-  elif [ "${LIBCOD_MYSQL_TYPE}" = "1" ]; then \
-    MYSQL_ARG="mysql1"; \
-  elif [ "${LIBCOD_MYSQL_TYPE}" = "2" ]; then \
-    MYSQL_ARG="mysql2"; \
-  else \
-    MYSQL_ARG="nomysql"; \
-  fi && \
-  if [ "${LIBCOD_SPEEX_ENABLE}" = "0" ]; then \
-    SPEEX_ARG="nospeex"; \
-  else \
-    SPEEX_ARG=""; \
-  fi && \
-  ./doit.sh "${MYSQL_ARG}" "${SPEEX_ARG}" && \
-  mv bin/libcod2.so /lib/libcod2_${COD2_VERSION}.so
 
 # ==================================================================
 # Dynamic build source selector alias
@@ -136,16 +82,6 @@ FROM build-${LIBCOD_TYPE} AS build
 # ==================================================================
 FROM alpine:3.22
 ARG COD2_VERSION
-
-# OCI standard labels
-LABEL org.opencontainers.image.title="Call of Duty 2 Server"
-LABEL org.opencontainers.image.description="Minimal & lightweight containerized Call of Duty 2 multiplayer game server with libcod"
-LABEL org.opencontainers.image.authors="Baptiste Gauduchon <bgauduch@users.noreply.github.com>"
-LABEL org.opencontainers.image.url="https://github.com/bgauduch/call-of-duty-2-docker-server"
-LABEL org.opencontainers.image.source="https://github.com/bgauduch/call-of-duty-2-docker-server"
-LABEL org.opencontainers.image.documentation="https://github.com/bgauduch/call-of-duty-2-docker-server/blob/main/README.md"
-LABEL org.opencontainers.image.licenses="MIT"
-LABEL org.opencontainers.image.vendor="Baptiste Gauduchon"
 
 # Create non-root user for running the server
 ENV SERVER_USER="cod2"
