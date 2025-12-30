@@ -9,4 +9,4 @@ services:
         LIBCOD_TYPE: "ddrabik"  # Options: "voron" or "ibuddieat"
         LIBCOD_MYSQL_TYPE: "1"
         LIBCOD_SPEEX_ENABLE: "0"
-    image: bgauduch/cod2server:dev
+    image: ddrabik/cod2server:dev
