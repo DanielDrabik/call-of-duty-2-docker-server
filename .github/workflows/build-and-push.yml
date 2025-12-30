@@ -1,0 +1,76 @@
+name: Build and Push Docker Image
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-push:
+    name: Build and Push COD2 Server
+    runs-on: ubuntu-latest
+
+    env:
+      COD2_VERSION: "1_3"
+      COD2_LNXDED_TYPE: "_nodelay_va_loc"
+      LIBCOD_TYPE: "ddrabik"
+      LIBCOD_MYSQL_TYPE: "1"
+
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_PASSWORD }}
+
+      - name: Extract metadata for Docker
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ secrets.DOCKERHUB_USERNAME }}/cod2server
+          tags: |
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=raw,value=${{ env.COD2_VERSION }}${{ env.COD2_LNXDED_TYPE }}-${{ env.LIBCOD_TYPE }},enable={{is_default_branch}}
+            type=sha,prefix={{branch}}-
+            type=ref,event=branch
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          build-args: |
+            COD2_VERSION=${{ env.COD2_VERSION }}
+            COD2_LNXDED_TYPE=${{ env.COD2_LNXDED_TYPE }}
+            LIBCOD_TYPE=${{ env.LIBCOD_TYPE }}
+            LIBCOD_MYSQL_TYPE=${{ env.LIBCOD_MYSQL_TYPE }}
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Create job summary
+        run: |
+          echo "## 🚀 Docker Image Published" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Configuration:**" >> $GITHUB_STEP_SUMMARY
+          echo "- COD2 Version: \`${{ env.COD2_VERSION }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- Binary Type: \`${{ env.COD2_LNXDED_TYPE }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- LibCOD: \`${{ env.LIBCOD_TYPE }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- MySQL Support: \`${{ env.LIBCOD_MYSQL_TYPE }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Tags:**" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          echo "${{ steps.meta.outputs.tags }}" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
