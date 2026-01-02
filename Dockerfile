@@ -2,11 +2,11 @@
 ARG COD2_VERSION="1_3"
 ARG COD2_LNXDED_TYPE="_nodelay_va_loc"
 # Options: "voron" or "ibuddieat"
-ARG LIBCOD_TYPE="ibuddieat"
+ARG LIBCOD_TYPE="ddrabik"
 # Options: [0 = mysql disables (default); 1 = default mysql; 2 = VoroN mysql]
 ARG LIBCOD_MYSQL_TYPE=0
 ARG LIBCOD_SPEEX_ENABLE=0
-ARG LIBCOD_VORON_VERSION="8e0dee9bf14510c8565e3633b7c0efdf6f9b8a11"
+ARG LIBCOD_DDRABIK_VERSION="8b092e8a1228c4a1790780a62973e765f87b3967"
 ARG LIBCOD_IBUDDIEAT_VERSION="v14.0"
 ARG SPEEX_VERSION="Speex-1.2.1"
 
@@ -48,17 +48,17 @@ RUN dpkg --add-architecture i386 \
   && rm -rf /var/lib/apt/lists/*
 
 # ==================================================================
-# Builder for "voron" libcod
+# Builder for "ddrabik" libcod
 # ==================================================================
 FROM build-base AS build-ddrabik
 ARG COD2_VERSION
 ARG LIBCOD_MYSQL_TYPE
-ARG LIBCOD_VORON_VERSION
+ARG LIBCOD_DDRABIK_VERSION
 ARG TMPDIR=/tmp
 
 RUN git clone https://github.com/DanielDrabik/libcod "${TMPDIR}/libcod2"
 WORKDIR ${TMPDIR}/libcod2
-RUN git checkout ${LIBCOD_VORON_VERSION}
+RUN git checkout ${LIBCOD_DDRABIK_VERSION}
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 # Configure MySQL/SQLite support (0=disable via config.hpp modification)
