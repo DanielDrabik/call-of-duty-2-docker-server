@@ -11,14 +11,14 @@
   "customManagers": [
     {
       "customType": "regex",
-      "description": "Update voron libcod git commit SHA in Dockerfile",
+      "description": "Update ddrabik libcod git commit SHA in Dockerfile",
       "managerFilePatterns": ["/^Dockerfile$/"],
       "matchStrings": [
-        "ARG LIBCOD_VORON_VERSION=\"(?<currentValue>[a-f0-9]+)\""
+        "ARG LIBCOD_DDRABIK_VERSION=\"(?<currentValue>[a-f0-9]+)\""
       ],
       "datasourceTemplate": "git-refs",
-      "depNameTemplate": "https://github.com/voron00/libcod",
-      "packageNameTemplate": "voron00/libcod",
+      "depNameTemplate": "https://github.com/DanielDrabik/libcod",
+      "packageNameTemplate": "DanielDrabik/libcod",
       "versioningTemplate": "loose"
     },
     {
@@ -83,7 +83,7 @@
     },
     {
       "matchManagers": ["custom.regex"],
-      "matchPackageNames": ["voron00/libcod", "ibuddieat/zk_libcod"],
+      "matchPackageNames": ["DanielDrabik/libcod", "ibuddieat/zk_libcod"],
       "labels": ["dependencies", "libcod"],
       "automerge": false,
       "reviewers": ["bgauduch"],
