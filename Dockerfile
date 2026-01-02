@@ -15,7 +15,7 @@ ARG SPEEX_VERSION="Speex-1.2.1"
 # ==================================================================
 # Force linux/amd64 platform for build stage to support i386 architecture
 # hadolint ignore=DL3029
-FROM --platform=linux/amd64 debian:bookworm-20251020-slim AS build-base
+FROM ddrabik/libcod-build-environment:589bb21 AS build-base
 ARG COD2_VERSION
 ARG COD2_LNXDED_TYPE
 # Define temporary directory for build artifacts
